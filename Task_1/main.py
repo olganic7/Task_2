@@ -2,7 +2,6 @@
 import sys, math  # sys нужен для передачи argv в QApplication
 from Particle import Particle, Speed, Coord
 from gl_widget import glWidget
-from Particle_system import ParticleSystem
 from PyQt5 import QtWidgets, QtCore, QtGui, QtOpenGL
 import ui_for_particles
 import OpenGL.GL as gl

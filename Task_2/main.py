@@ -17,8 +17,8 @@ alpha = Symbol('alpha', Positive=True)
 
 #значения
 alpha_value = 18.0
-k1_value = 0.03
-k2_value = 0.05
+k1_value = 0.012
+k2_value = 0.012
 k_1_value = 0.01
 k_2_value = 10**(-9)
 k3_value = 10.0 #k30 
@@ -33,6 +33,7 @@ equation_2 = k2 * (1 - x - y) ** 2 - k_2 * y ** 2 - x * y * k3 *(1-x)**alpha
 solution = solve([equation_1, equation_2], y, k2)
 y_sol = solution[0][0] #y(x)
 k2_sol = solution[0][1] #k2(x)
+print('k2_sol', k2_sol)
 a11 = -k_1 - k1 - k3*y*((1-x)**alpha- x*alpha*(1-x)**(alpha-1))
 a12 = -k1- k3*x*(1-x)**alpha
 a21 = -k2 - k3*y*((1-x)**alpha - x*alpha*(1-x)**(alpha-1))
@@ -44,6 +45,7 @@ matrix_A = Matrix([equation_1, equation_2])
 matrix_variables = Matrix([x, y]) #матрица Якоби
 jacobian_ = matrix_A.jacobian(matrix_variables) #Якобиан
 det_A = jacobian_.det() #определитель матрицы на стационаре
+print(det_A)
 trace_A = jacobian_.trace() #след матрицы
 S_A = lambdify((x,y,k1,k_1,k2,k_2,k3,alpha),trace_A)
 delta_A = lambdify((x,y,k1,k_1,k2,k_2,k3,alpha),det_A)
@@ -60,6 +62,7 @@ bifurcation_point = []
 def parametres_portrait():
     #линия нейтральности S_A = 0
     #линия кратности delta_A = 0
+    #k2_new = k2_sol.subs(y,y_sol)
     sol_k2_trace = solve(trace_A.subs(y,y_sol),k2)[0] #выражаем k2 из следа = 0
     k1_sol_new = solve(sol_k2_trace - k2_sol,k1)[0] #приравниваем k2 из одного уравнение к k2 из следа, получаем k1 
     k2_sol_new = k2_sol.subs(k1,k1_sol_new)
@@ -70,8 +73,8 @@ def parametres_portrait():
     plt.ylabel(r'$k_2$')
     plt.show()
 
-    det_A_ = det_A.subs(y,y_sol)
-    sols = solve(det_A_,k2) #выражаем k1 из определителя = 0
+    #det_A_ = det_A.subs(y,y_sol)
+    sols = solve(det_A.subs(y,y_sol),k2) #выражаем k1 из определителя = 0
     sol_k2_det_ = sols[0]
     sol_k1_det = solve(sol_k2_det_ - k2_sol, k1)[0]
     sol_k2_det = k2_sol.subs(k1,sol_k1_det)
@@ -102,30 +105,30 @@ def analysis_k2(elem, k3a):
             if fl != 0 and fl == 1:
                 #print(x_range[i], cur_y)
                 bifurcation_point.append([x_range[i],cur_y])
-                plt.plot(k2_f[i],x_range[i],'r', marker='o', label="hopf_x")
-                plt.plot(k2_f[i],y_f[i],'r', marker='o', label="hopf_y")
+                plt.plot(k2_f[i],x_range[i],'r', marker='o', label="hopf_node")
+                plt.plot(k2_f[i],y_f[i],'r', marker='o')
             fl = -1
             #print ('меньше нуля',i, sa, cur_y, cur_k2, fl)
         else:
             if fl != 0 and fl == -1:
                 #print(x_range[i], cur_y)
                 bifurcation_point.append([x_range[i],cur_y])
-                plt.plot(k2_f[i],x_range[i],'r', marker='o', label="hopf_x")
-                plt.plot(k2_f[i],y_f[i],'r', marker='o', label="hopf_y")
+                plt.plot(k2_f[i],x_range[i],'r', marker='o', label="hopf_node")
+                plt.plot(k2_f[i],y_f[i],'r', marker='o')
             fl = 1
             #print('больше нуля',i, sa, cur_y, cur_k2, fl)
 
         if deltaa < 0:
             if fl_delta != 0 and fl_delta == 1:
                 #print ('определитель меньше нуля',i, deltaa, cur_y, cur_k2, fl)
-                plt.plot(k2_f[i],x_range[i],'k*', marker='o', label="saddle-node_x")
-                plt.plot(k2_f[i],y_f[i],'k*', marker='o', label="saddle-node_y")
+                plt.plot(k2_f[i],x_range[i],'k*', marker='o', label="saddle_node")
+                plt.plot(k2_f[i],y_f[i],'k*', marker='o')
             fl_delta = -1
         else:
             if fl_delta != 0 and fl_delta == -1:
                 #print('определитель больше нуля',i, deltaa, cur_y, cur_k2, fl)
-                plt.plot(k2_f[i],x_range[i],'k*', marker='o', label="saddle-node_x")
-                plt.plot(k2_f[i],y_f[i],'k*', marker='o', label="saddle-node_y")
+                plt.plot(k2_f[i],x_range[i],'k*', marker='o', label="saddle_node")
+                plt.plot(k2_f[i],y_f[i],'k*', marker='o')
             fl_delta = 1
     line1, = plt.plot(k2_f, x_range, 'b--', label="x")
     line2, = plt.plot(k2_f, y_f, 'k', label="y")
@@ -142,7 +145,8 @@ def analysis_k2(elem, k3a):
     plt.show()
 
 def solve_system(init, dt, iterations):
-
+    k1_value = 0.012
+    k2_value = 0.012
     func_1 = lambdify((x, y, k1, k_1, k3,alpha), equation_1)
     func_2 = lambdify((x, y, k2, k_2, k3,alpha), equation_2)
 
@@ -155,7 +159,7 @@ def solve_system(init, dt, iterations):
 def phase_portrait():
     func_1 = lambdify((x, y, k1, k_1, k3,alpha), equation_1)
     func_2 = lambdify((x, y, k2, k_2, k3,alpha), equation_2)
-    Y, X = np.mgrid[0:.5:1000j, 0:1:2000j]
+    Y, X = np.mgrid[0:1:3000j, 0:1:3000j]
     U = func_1(X, Y, k1_value, k_1_value, k3_value,alpha_value)
     V = func_2(X, Y, k2_value, k_2_value, k3_value,alpha_value)
     velocity = np.sqrt(U*U + V*V)
@@ -163,19 +167,18 @@ def phase_portrait():
     plt.xlabel('x')
     plt.ylabel('y')
     plt.show()
-    print('тут4')
 
 #----------------------ОДНОПАРАМЕТРИЧЕСКИЙ АНАЛИЗ ПО K2--------------------------------
 #for elem in k3_range:
-    #analysis_k2(elem,0)
+#    analysis_k2(elem,0)
 
 #for elem in alpha_range:
-#    analysis_k2(elem,1)
+#   analysis_k2(elem,1)
 #----------------------ДВУХПАРАМЕТРИЧЕСКИЙ АНАЛИЗ ПО K1,K2--------------------------------
 #parametres_portrait()
 #phase_portrait()
 #колебания
-"""res, times = solve_system([0.1, 0.1], 1e-2, 1e4)
+res, times = solve_system([0.1, 0.1], 1e-2, 1e6)
 ax = plt.subplot(211)
 plt.plot(times, res[:, 0])
 plt.setp(ax.get_xticklabels(), visible=False)
@@ -186,4 +189,4 @@ plt.plot(times, res[:, 1], color='red')
 plt.xlabel('t')
 plt.ylabel('y')
 plt.grid()
-plt.show() """
+plt.show()
